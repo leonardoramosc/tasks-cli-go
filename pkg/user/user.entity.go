@@ -56,7 +56,7 @@ func validateUsername(username string) error {
 func validateAge(age int8) error {
 	const maxAge int8 = 110
 	
-	if age < 0 || age > maxAge {
+	if age <= 0 || age > maxAge {
 		return errors.New(
 			fmt.Sprintf("La edad del usuario debe ser mayor a 0 y menor que %d", maxAge),
 		)

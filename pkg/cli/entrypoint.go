@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"bufio"
 	"os"
+	"strconv"
 	"github.com/leonardoramosc/task-cli/pkg/user"
 	"github.com/leonardoramosc/task-cli/pkg/task"
 )
@@ -83,11 +84,54 @@ func getLoginMenu() *menu {
 	m := menu{}
 
 	opt1 := option{number: 1, title: "Iniciar sesión", optionType: logUser}
-	opt2 := option{number: 2, title: "Registrarme", optionType: "Bienvenido a nuestra app"}
+	opt2 := option{number: 2, title: "Registrarme", optionType: createUser}
 
 	m.WithOption(opt1).WithOption(opt2)
 
 	return &m
+}
+
+func displayUserMenu(u *user.UserSchema) {
+	um := menu{}
+	um.WithOption(option{number: 1, title: "Ver mis tareas", optionType: listUserTasks(u)}).WithOption(option{number: 2, title: "Crear tarea", optionType: createUserTask(u)})
+
+	um.Display().GetUserSelection()
+}
+
+func createUser() {
+	fmt.Println("Ingresa tu nombre de usuario:")
+	u := readUserInput()
+
+	fmt.Println("Ingresa tu edad:")
+	a := readUserInput()
+
+	aint, e := strconv.ParseInt(a, 10, 8)
+
+	if e != nil {
+		fmt.Println("La edad debe ser un número")
+		createUser()
+	}
+
+	fmt.Println("Ingresa tu contraseña")
+	p := readUserInput()
+
+	newUser, e := user.New(u, int8(aint), p)
+
+	if e != nil {
+		fmt.Println(e)
+		createUser()
+	}
+
+	uc := user.GetUserCollection()
+
+	us, e := uc.CreateUser(newUser)
+
+	if e != nil {
+		fmt.Println("No se pudo crear el usuario. razón:", e)
+		return
+	}
+
+	displayUserMenu(us)
 }
 
 func logUser() {
@@ -109,12 +153,9 @@ func logUser() {
 		fmt.Println(eMsg)
 		logUser()
 	} else {
-		fmt.Printf("\nBienvenido %v %v. ¿Qué deseas hacer?\n", username, password)
+		fmt.Printf("\nBienvenido %v. ¿Qué deseas hacer?\n", username)
 
-		subMenu := menu{}
-		subMenu.WithOption(option{number: 1, title: "Ver mis tareas", optionType: listUserTasks(u)}).WithOption(option{number: 2, title: "Crear tarea", optionType: createUserTask(username)})
-	
-		subMenu.Display().GetUserSelection()
+		displayUserMenu(u)
 	}
 }
 
@@ -132,7 +173,7 @@ func listUserTasks(us *user.UserSchema) func() {
 	}
 }
 
-func createUserTask(username string) func() {
+func createUserTask(us *user.UserSchema) func() {
 	return func() {
 		fmt.Println("Inserta un título para tu tarea:")
 		title := readUserInput()
@@ -143,8 +184,9 @@ func createUserTask(username string) func() {
 		t := &task.Task{Title: title, Completed: false}
 
 		uc := user.GetUserCollection()
-		uc.AppendTask(username, t)
+		uc.AppendTask(us.Username, t)
 		fmt.Println("Tarea creada exitosamente")
+		displayUserMenu(us)
 	}
 }
 
@@ -162,9 +204,9 @@ func Entrypoint() {
 func readUserInput() string {
 	reader := bufio.NewReader(os.Stdin)
 
-	text, _ := reader.ReadString('\n')
+	text, _, _ := reader.ReadLine()
 
-	return text
+	return string(text)
 }
 
 /*

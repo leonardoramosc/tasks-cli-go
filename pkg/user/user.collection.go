@@ -42,17 +42,17 @@ func (uc *userCollection) Exec() {
 	uc.database.Update(uc)
 }
 
-func (uc *userCollection) CreateUser(u *User) error {
+func (uc *userCollection) CreateUser(u *User) (*UserSchema, error) {
 	existingUser, _ := uc.GetByUsername(u.Username)
 	if existingUser != nil {
-		return errors.New(fmt.Sprintf("El username: %v ya esta tomado\n", u.Username))
+		return nil, errors.New(fmt.Sprintf("El username: %v ya esta tomado\n", u.Username))
 	}
 	
 	us := UserSchema{ User: u, Tasks: []*task.Task{} }
 
 	uc.Data = append(uc.Data, &us)
 
-	return nil
+	return &us, nil
 }
 
 func (uc *userCollection) GetByUsername(username string) (*UserSchema, error) {

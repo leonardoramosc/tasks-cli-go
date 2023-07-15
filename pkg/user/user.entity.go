@@ -24,7 +24,7 @@ func (u *User) validate() error {
 	return nil
 }
 
-func CreateUser(username string, age int8, password string) (*User, error) {
+func New(username string, age int8, password string) (*User, error) {
 	newUser := &User{ Username: username, Age: age, Password: password }
 	if e := newUser.validate(); e != nil {
 		return nil, e
